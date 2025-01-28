@@ -4,7 +4,7 @@
 
 ## 许可协议
 
-本项目是All Rights Reserved的，GitHub仅作为代码托管的平台
+详见本仓库Wiki
 
 ## 致谢
 
