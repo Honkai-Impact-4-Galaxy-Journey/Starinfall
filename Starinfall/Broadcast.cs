@@ -1,6 +1,8 @@
-﻿using LabApi.Events.Handlers;
+﻿using CommandSystem;
+using LabApi.Events.Handlers;
 using LabApi.Features.Wrappers;
 using MEC;
+using PlayerRoles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,6 +96,84 @@ namespace Starinfall
                 }
                 yield return Timing.WaitForSeconds(1f);
             }
+        }
+    }
+    [CommandHandler(typeof(ClientCommandHandler))]
+    public class TeamChat : ICommand
+    {
+        public string Command => "c";
+
+        public string[] Aliases => Array.Empty<string>();
+
+        public string Description => "阵营聊天";
+
+        public static bool Spectators(Player player) => player.Role == RoleTypeId.Spectator;
+
+        public static bool MTF(Player player) => player.Role == RoleTypeId.NtfSpecialist || player.Role == RoleTypeId.NtfPrivate || player.Role == RoleTypeId.NtfCaptain || player.Role == RoleTypeId.NtfSergeant || player.Role == RoleTypeId.FacilityGuard;
+
+        public static bool Chaos(Player player) => player.Role == RoleTypeId.ChaosConscript || player.Role == RoleTypeId.ChaosRifleman || player.Role == RoleTypeId.ChaosMarauder || player.Role == RoleTypeId.ChaosRepressor;
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            Player player = Player.Get(sender);
+            BroadcastItem item = new BroadcastItem { prefix = "阵营聊天", priority = (byte)BroadcastPriority.Normal, text = $"[{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}]", time = 5 };
+            switch (player.Team)
+            {
+                case Team.FoundationForces:
+                    item.Check += MTF;
+                    item.text = $"<color=cyan>{item.text}</color>";
+                    break;
+                case Team.ChaosInsurgency:
+                    item.Check += Chaos;
+                    item.text = $"<color=green>{item.text}</color>";
+                    break;
+                case Team.Scientists:
+                case Team.ClassD:
+                    response = "博士和DD无法使用阵营聊天";
+                    return false;
+                case Team.Dead:
+                    item.Check += Spectators;
+                    break;
+            }
+            BroadcastMain.SendNormalCast(item);
+            response = "Done!";
+            return true;
+        }
+    }
+    [CommandHandler(typeof(ClientCommandHandler))]
+    public class Bchat : ICommand
+    {
+        public string Command => "globalchat";
+
+        public string[] Aliases => new string[] { "bc" };
+
+        public string Description => "全部聊天";
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            Player player = Player.Get(sender);
+            BroadcastItem item = new BroadcastItem { prefix = "全局聊天", priority = (byte)BroadcastPriority.Normal, text = $"[{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}]", time = 5 };
+            BroadcastMain.SendGlobalcast(item);
+            response = "Done!";
+            return true;
+        }
+    }
+    [CommandHandler(typeof(RemoteAdminCommandHandler))]
+    public class AdminBroadCast : ICommand
+    {
+        public string Command => "abc";
+
+        public string[] Aliases => Array.Empty<string>();
+
+        public string Description => "管理员公告";
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            Player player = Player.Get(sender);
+            BroadcastItem broadcastItem = new BroadcastItem { prefix = "管理员公告", priority = (byte)BroadcastPriority.High, text = $"[{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}]", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            BroadcastMain.SendGlobalcast(broadcastItem);
+            response = "Done!";
+            return true;
         }
     }
 }
