@@ -26,6 +26,7 @@ namespace Starinfall
         public override void Enable()
         {
             Instance = this;
+            BroadcastMain.OnEnabled();
             Logger.Info("Plugin Loaded");
         }
         public override void Disable()
