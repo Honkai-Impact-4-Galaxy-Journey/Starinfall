@@ -1,5 +1,7 @@
 ﻿using CommandSystem;
+using GameCore;
 using LabApi.Events.Handlers;
+using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
@@ -97,6 +99,33 @@ namespace Starinfall
                 yield return Timing.WaitForSeconds(1f);
             }
         }
+        public static string GetOutput(Player player)
+        {
+            try
+            {
+                string response = "<size=24>";
+                List<BroadcastItem> items = new List<BroadcastItem>();
+                items.AddRange(globals.Where(b => b.time > 0));
+                items.AddRange(from item in normals
+                               where (item.time > 0) && (item.targets.Contains(player.UserId) || (item.Check != null && item.Check(player)))
+                               select item);
+                items.Sort();
+                int remain = 5;
+                foreach (var item in items)
+                {
+                    if (remain > 0) response += $"{item}\n";
+                    remain--;
+                }
+                if (remain < 0) response += $"<alpha=#AA>还有{-remain}条信息未显示...</alpha>";
+                response += "</size>";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"{ex.GetType()}:{ex.Message}");
+                return "";
+            }
+        }
     }
     [CommandHandler(typeof(ClientCommandHandler))]
     public class TeamChat : ICommand
@@ -116,7 +145,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem item = new BroadcastItem { prefix = "阵营聊天", priority = (byte)BroadcastPriority.Normal, text = $"[{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}]", time = 5 };
+            BroadcastItem item = new BroadcastItem { prefix = "阵营聊天", priority = (byte)BroadcastPriority.Normal, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = 5 };
             switch (player.Team)
             {
                 case Team.FoundationForces:
@@ -152,7 +181,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem item = new BroadcastItem { prefix = "全局聊天", priority = (byte)BroadcastPriority.Normal, text = $"[{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}]", time = 5 };
+            BroadcastItem item = new BroadcastItem { prefix = "全局聊天", priority = (byte)BroadcastPriority.Normal, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = 5 };
             BroadcastMain.SendGlobalcast(item);
             response = "Done!";
             return true;
@@ -170,7 +199,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem broadcastItem = new BroadcastItem { prefix = "管理员公告", priority = (byte)BroadcastPriority.High, text = $"[{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}]", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            BroadcastItem broadcastItem = new BroadcastItem { prefix = "管理员公告", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
             BroadcastMain.SendGlobalcast(broadcastItem);
             response = "Done!";
             return true;
