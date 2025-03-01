@@ -80,6 +80,12 @@ namespace Starinfall
         {
             while (true)
             {
+                //消息主循环
+                foreach (Player player in Player.List)
+                {
+                    player.SendBroadcast(GetOutput(player), 5);
+                }
+                //消息过期处理
                 foreach (var item in globals)
                 {
                     item.time--;
