@@ -85,8 +85,8 @@ namespace Starinfall
         {
             SendNormalCast(new BroadcastItem
             {
-                prefix = "SCP914",
-                Check = p => p.Room == Room.Get(RoomName.Lcz914),
+                prefix = "<color=yellow>SCP914</color>",
+                Check = p => p.Room.Name == RoomName.Lcz914,
                 priority = (byte)BroadcastPriority.High,
                 text = $"{ev.Player.Nickname}以{Scp914Mode(ev.KnobSetting)}模式启动了914",
                 time = 3
@@ -96,8 +96,8 @@ namespace Starinfall
         {
             SendNormalCast(new BroadcastItem
             {
-                prefix = "SCP914",
-                Check = p => p.Room == Room.Get(RoomName.Lcz914),
+                prefix = "<color=yellow>SCP914</color>",
+                Check = p => p.Room.Name == RoomName.Lcz914,
                 priority = (byte)BroadcastPriority.High,
                 text = $"{ev.Player.Nickname}将加工模式调整为{Scp914Mode(ev.KnobSetting)}",
                 time = 3
@@ -122,7 +122,7 @@ namespace Starinfall
                 //消息主循环
                 foreach (Player player in Player.List)
                 {
-                    player.SendBroadcast(GetOutput(player), 5);
+                    player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
                 }
                 //消息过期处理
                 foreach (var item in globals)
@@ -148,11 +148,11 @@ namespace Starinfall
         {
             try
             {
-                string response = "<size=24>";
+                string response = "<line-height=65%><size=24>";
                 List<BroadcastItem> items = new List<BroadcastItem>();
                 items.AddRange(globals.Where(b => b.time > 0));
                 items.AddRange(from item in normals
-                               where (item.time > 0) && (item.targets.Contains(player.UserId) || (item.Check != null && item.Check(player)))
+                               where (item.time > 0) && player != Player.Host && (item.targets.Contains(player.UserId) || (item.Check != null && item.Check(player)))
                                select item);
                 items.Sort();
                 int remain = 5;
@@ -161,8 +161,8 @@ namespace Starinfall
                     if (remain > 0) response += $"{item}\n";
                     remain--;
                 }
-                if (remain < 0) response += $"<alpha=#AA>还有{-remain}条信息未显示...</alpha>";
-                response += "</size>";
+                if (remain < 0) response += $"<alpha=#AA>还有{-remain}条信息未显示...";
+                response += "</size></line-height>";
                 return response;
             }
             catch (Exception ex)
@@ -190,7 +190,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem item = new BroadcastItem { prefix = "阵营聊天", priority = (byte)BroadcastPriority.Normal, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = 5 };
+            BroadcastItem item = new BroadcastItem { prefix = "<color=yellow>阵营聊天</color>", priority = (byte)BroadcastPriority.Normal, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = 5 };
             switch (player.Team)
             {
                 case Team.FoundationForces:
@@ -226,7 +226,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem item = new BroadcastItem { prefix = "全局聊天", priority = (byte)BroadcastPriority.Normal, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = 5 };
+            BroadcastItem item = new BroadcastItem { prefix = "<color=yellow>全局聊天</color>", priority = (byte)BroadcastPriority.Normal, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = 5 };
             BroadcastMain.SendGlobalcast(item);
             response = "Done!";
             return true;
@@ -244,7 +244,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem broadcastItem = new BroadcastItem { prefix = "管理员公告", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            BroadcastItem broadcastItem = new BroadcastItem { prefix = "<color=cyan>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
             BroadcastMain.SendGlobalcast(broadcastItem);
             response = "Done!";
             return true;
