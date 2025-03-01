@@ -38,10 +38,10 @@ namespace Starinfall
         }
         public override string ToString()
         {
-            string result = "「";
-            if (!Noprefix) result += $"{prefix}|";
+            string result = "";
+            if (!Noprefix) result += $"「{prefix}」";
             result += text;
-            result += $"」";
+            //result += $"";
             return result;
         }
         public int CompareTo(BroadcastItem other)

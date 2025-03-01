@@ -22,6 +22,7 @@ namespace Starinfall
         public override Version Version => new Version(0,1,0,0);
         public override string Description => "服务器核心插件";
         public override Version RequiredApiVersion => new Version("0.0.0.0");
+        public string Codename => "";
         public override void Enable()
         {
             Instance = this;
