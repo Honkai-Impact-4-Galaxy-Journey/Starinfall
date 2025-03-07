@@ -51,6 +51,43 @@ namespace Starinfall
             return 0;
         }
     }
+    public class MiscBroadcast
+    {
+        public static void On914Activated(Scp914ActivatedEventArgs ev)
+        {
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=yellow>SCP914</color>",
+                Check = p => p.Room.Name == RoomName.Lcz914,
+                priority = (byte)BroadcastPriority.High,
+                text = $"{ev.Player.Nickname}以{Scp914Mode(ev.KnobSetting)}模式启动了914",
+                time = 3
+            });
+        }
+        public static void On914KnobChanged(Scp914KnobChangedEventArgs ev)
+        {
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=yellow>SCP914</color>",
+                Check = p => p.Room.Name == RoomName.Lcz914,
+                priority = (byte)BroadcastPriority.High,
+                text = $"{ev.Player.Nickname}将加工模式调整为{Scp914Mode(ev.KnobSetting)}",
+                time = 3
+            });
+        }
+        public static string Scp914Mode(Scp914KnobSetting setting)
+        {
+            switch (setting)
+            {
+                case Scp914KnobSetting.Rough: return "粗加工";
+                case Scp914KnobSetting.Coarse: return "半粗加工";
+                case Scp914KnobSetting.OneToOne: return "1:1";
+                case Scp914KnobSetting.Fine: return "精加工";
+                case Scp914KnobSetting.VeryFine: return "超精加工";
+            }
+            return "Unknown";
+        }
+    }
     public class BroadcastMain
     {
         public static CoroutineHandle coroutine;
@@ -66,42 +103,8 @@ namespace Starinfall
         {
             ServerEvents.RoundRestarted += OnRoundRestart;
             ServerEvents.WaitingForPlayers += OnWaitingForPlayersEvent;
-            Scp914Events.KnobChanged += On914KnobChanged;
-            Scp914Events.Activated += On914Activated;
-        }
-        public static string Scp914Mode(Scp914KnobSetting setting)
-        {
-            switch (setting)
-            {
-                case Scp914KnobSetting.Rough: return "粗加工";
-                case Scp914KnobSetting.Coarse: return "半粗加工";
-                case Scp914KnobSetting.OneToOne: return "1:1";
-                case Scp914KnobSetting.Fine: return "精加工";
-                case Scp914KnobSetting.VeryFine: return "超精加工";
-            }
-            return "Unknown";
-        }
-        public static void On914Activated(Scp914ActivatedEventArgs ev)
-        {
-            SendNormalCast(new BroadcastItem
-            {
-                prefix = "<color=yellow>SCP914</color>",
-                Check = p => p.Room.Name == RoomName.Lcz914,
-                priority = (byte)BroadcastPriority.High,
-                text = $"{ev.Player.Nickname}以{Scp914Mode(ev.KnobSetting)}模式启动了914",
-                time = 3
-            });
-        }
-        public static void On914KnobChanged(Scp914KnobChangedEventArgs ev)
-        {
-            SendNormalCast(new BroadcastItem
-            {
-                prefix = "<color=yellow>SCP914</color>",
-                Check = p => p.Room.Name == RoomName.Lcz914,
-                priority = (byte)BroadcastPriority.High,
-                text = $"{ev.Player.Nickname}将加工模式调整为{Scp914Mode(ev.KnobSetting)}",
-                time = 3
-            });
+            Scp914Events.KnobChanged += MiscBroadcast.On914KnobChanged;
+            Scp914Events.Activated += MiscBroadcast.On914Activated;
         }
         public static void OnWaitingForPlayersEvent()
         {
