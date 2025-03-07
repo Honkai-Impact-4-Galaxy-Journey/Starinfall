@@ -127,14 +127,14 @@ namespace Starinfall
     }
     public class BroadcastMain
     {
-        public static CoroutineHandle coroutine;
+        public static CoroutineHandle ExpiringCoroutine, MessageCoroutine;
         public static List<BroadcastItem> globals = new List<BroadcastItem>();
         public static List<BroadcastItem> normals = new List<BroadcastItem>();
         public static void OnRoundRestart()
         {
             globals.Clear();
             normals.Clear();
-            Timing.KillCoroutines(coroutine);
+            Timing.KillCoroutines(ExpiringCoroutine, MessageCoroutine);
         }
         public static void OnEnabled()
         {
@@ -148,7 +148,8 @@ namespace Starinfall
         }
         public static void OnWaitingForPlayersEvent()
         {
-            coroutine = Timing.RunCoroutine(Main());
+            ExpiringCoroutine = Timing.RunCoroutine(ExpiringMain());
+            MessageCoroutine = Timing.RunCoroutine(MessageMain());
         }
         public static void SendGlobalcast(BroadcastItem item)
         {
@@ -158,15 +159,10 @@ namespace Starinfall
         {
             normals.Add(item);
         }
-        public static IEnumerator<float> Main()
+        public static IEnumerator<float> ExpiringMain()
         {
             while (true)
             {
-                //消息主循环
-                foreach (Player player in Player.List)
-                {
-                    player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
-                }
                 //消息过期处理
                 foreach (var item in globals)
                 {
@@ -185,6 +181,18 @@ namespace Starinfall
                     if (normals[i].time < 0) normals.RemoveAt(i);
                 }
                 yield return Timing.WaitForSeconds(1f);
+            }
+        }
+        public static IEnumerator<float> MessageMain()
+        {
+            while (true)
+            {
+                //消息主循环
+                foreach (Player player in Player.List)
+                {
+                    player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
+                }
+                yield return Timing.WaitForSeconds(0.5f);
             }
         }
         public static string GetOutput(Player player)
