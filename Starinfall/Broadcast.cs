@@ -293,4 +293,44 @@ namespace Starinfall
             return true;
         }
     }
+    [CommandHandler(typeof(ClientCommandHandler))]
+    public class AdminHelp : ICommand
+    {
+        public string Command => "ac";
+
+        public string[] Aliases => Array.Empty<string>();
+
+        public string Description => "向在线管理发送消息";
+
+        public bool CheckPermission(Player player)
+        {
+            return (player.UserGroup?.Permissions & (ulong)PlayerPermissions.AdminChat) != 0;
+        }
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            var adminList = from p in Player.List
+                            where CheckPermission(p)
+                            select p;
+            if (adminList.Count() == 0)
+            {
+                response = "当前服务器中没有管理员！";
+                return false;
+            }
+            else
+            {
+                Player player = Player.Get(sender);
+                BroadcastItem item = new BroadcastItem
+                {
+                    prefix = "<color=red>玩家求助</color>",
+                    priority = (byte)BroadcastPriority.High,
+                    text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}",
+                    time = 8,
+                    Check = CheckPermission
+                };
+                response = "Done!";
+                return true;
+            }
+        }
+    }
 }
