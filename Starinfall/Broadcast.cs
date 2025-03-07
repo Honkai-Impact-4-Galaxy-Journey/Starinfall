@@ -1,5 +1,6 @@
 ﻿using CommandSystem;
 using GameCore;
+using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp914Events;
 using LabApi.Events.Handlers;
 using LabApi.Features.Console;
@@ -53,6 +54,19 @@ namespace Starinfall
     }
     public class MiscBroadcast
     {
+        public static CoroutineHandle ScheduledMessage;
+        public static IEnumerator<float> ScheduleMessager(int time)
+        {
+            yield return Timing.WaitForSeconds(time);
+            BroadcastMain.SendGlobalcast(new BroadcastItem
+            {
+                prefix = "定时公告",
+                priority = (byte)BroadcastPriority.Low,
+                text = PluginMain.Instance.Config.ScheduledMessage,
+                time = 5
+            });
+        }
+        
         public static void On914Activated(Scp914ActivatedEventArgs ev)
         {
             BroadcastMain.SendNormalCast(new BroadcastItem
@@ -87,6 +101,29 @@ namespace Starinfall
             }
             return "Unknown";
         }
+
+        public static void OnRoundStarted()
+        {
+            if (PluginMain.Instance.Config.ScheduledTime != 0) ScheduledMessage = Timing.RunCoroutine(ScheduleMessager(PluginMain.Instance.Config.ScheduledTime));
+        }
+
+        public static void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            if (PluginMain.Instance.Config.JoinMessage == "null") return;
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=red>入服提醒</color>",
+                targets = new List<string> { ev.Player.UserId },
+                priority = (byte)BroadcastPriority.Low,
+                text = PluginMain.Instance.Config.JoinMessage,
+                time = 3
+            });
+        }
+
+        public static void OnRoundRestart()
+        {
+            Timing.KillCoroutines(ScheduledMessage);
+        }
     }
     public class BroadcastMain
     {
@@ -105,6 +142,9 @@ namespace Starinfall
             ServerEvents.WaitingForPlayers += OnWaitingForPlayersEvent;
             Scp914Events.KnobChanged += MiscBroadcast.On914KnobChanged;
             Scp914Events.Activated += MiscBroadcast.On914Activated;
+            ServerEvents.RoundStarted += MiscBroadcast.OnRoundStarted;
+            PlayerEvents.Joined += MiscBroadcast.OnPlayerJoined;
+            ServerEvents.RoundRestarted += MiscBroadcast.OnRoundRestart;
         }
         public static void OnWaitingForPlayersEvent()
         {
