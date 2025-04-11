@@ -336,6 +336,7 @@ namespace Starinfall
                     time = 8,
                     Check = CheckPermission
                 };
+                BroadcastMain.SendNormalCast(item);
                 response = "Done!";
                 return true;
             }
