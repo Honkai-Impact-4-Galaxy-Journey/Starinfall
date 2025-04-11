@@ -295,7 +295,7 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem broadcastItem = new BroadcastItem { prefix = "<color=cyan>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            BroadcastItem broadcastItem = new BroadcastItem { prefix = "<color=#00FFFF>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
             BroadcastMain.SendGlobalcast(broadcastItem);
             response = "Done!";
             return true;
