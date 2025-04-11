@@ -1,5 +1,6 @@
 ﻿using CommandSystem;
 using GameCore;
+using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp914Events;
 using LabApi.Events.Handlers;
 using LabApi.Features.Console;
@@ -51,23 +52,42 @@ namespace Starinfall
             return 0;
         }
     }
-    public class BroadcastMain
+    public class MiscBroadcast
     {
-        public static CoroutineHandle coroutine;
-        public static List<BroadcastItem> globals = new List<BroadcastItem>();
-        public static List<BroadcastItem> normals = new List<BroadcastItem>();
-        public static void OnRoundRestart()
+        public static CoroutineHandle ScheduledMessage;
+        public static IEnumerator<float> ScheduleMessager(int time)
         {
-            globals.Clear();
-            normals.Clear();
-            Timing.KillCoroutines(coroutine);
+            yield return Timing.WaitForSeconds(time);
+            BroadcastMain.SendGlobalcast(new BroadcastItem
+            {
+                prefix = "定时公告",
+                priority = (byte)BroadcastPriority.Low,
+                text = PluginMain.Instance.Config.ScheduledMessage,
+                time = 5
+            });
         }
-        public static void OnEnabled()
+        
+        public static void On914Activated(Scp914ActivatedEventArgs ev)
         {
-            ServerEvents.RoundRestarted += OnRoundRestart;
-            ServerEvents.WaitingForPlayers += OnWaitingForPlayersEvent;
-            Scp914Events.KnobChanged += On914KnobChanged;
-            Scp914Events.Activated += On914Activated;
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=yellow>SCP914</color>",
+                Check = p => p.Room.Name == RoomName.Lcz914,
+                priority = (byte)BroadcastPriority.High,
+                text = $"{ev.Player.Nickname}以{Scp914Mode(ev.KnobSetting)}模式启动了914",
+                time = 3
+            });
+        }
+        public static void On914KnobChanged(Scp914KnobChangedEventArgs ev)
+        {
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=yellow>SCP914</color>",
+                Check = p => p.Room.Name == RoomName.Lcz914,
+                priority = (byte)BroadcastPriority.High,
+                text = $"{ev.Player.Nickname}将加工模式调整为{Scp914Mode(ev.KnobSetting)}",
+                time = 3
+            });
         }
         public static string Scp914Mode(Scp914KnobSetting setting)
         {
@@ -81,31 +101,55 @@ namespace Starinfall
             }
             return "Unknown";
         }
-        public static void On914Activated(Scp914ActivatedEventArgs ev)
+
+        public static void OnRoundStarted()
         {
-            SendNormalCast(new BroadcastItem
+            if (PluginMain.Instance.Config.ScheduledTime != 0) ScheduledMessage = Timing.RunCoroutine(ScheduleMessager(PluginMain.Instance.Config.ScheduledTime));
+        }
+
+        public static void OnPlayerJoined(PlayerJoinedEventArgs ev)
+        {
+            if (PluginMain.Instance.Config.JoinMessage == "null") return;
+            BroadcastMain.SendNormalCast(new BroadcastItem
             {
-                prefix = "<color=yellow>SCP914</color>",
-                Check = p => p.Room.Name == RoomName.Lcz914,
-                priority = (byte)BroadcastPriority.High,
-                text = $"{ev.Player.Nickname}以{Scp914Mode(ev.KnobSetting)}模式启动了914",
+                prefix = "<color=red>入服提醒</color>",
+                targets = new List<string> { ev.Player.UserId },
+                priority = (byte)BroadcastPriority.Low,
+                text = PluginMain.Instance.Config.JoinMessage,
                 time = 3
             });
         }
-        public static void On914KnobChanged(Scp914KnobChangedEventArgs ev)
+
+        public static void OnRoundRestart()
         {
-            SendNormalCast(new BroadcastItem
-            {
-                prefix = "<color=yellow>SCP914</color>",
-                Check = p => p.Room.Name == RoomName.Lcz914,
-                priority = (byte)BroadcastPriority.High,
-                text = $"{ev.Player.Nickname}将加工模式调整为{Scp914Mode(ev.KnobSetting)}",
-                time = 3
-            });
+            Timing.KillCoroutines(ScheduledMessage);
+        }
+    }
+    public class BroadcastMain
+    {
+        public static CoroutineHandle ExpiringCoroutine, MessageCoroutine;
+        public static List<BroadcastItem> globals = new List<BroadcastItem>();
+        public static List<BroadcastItem> normals = new List<BroadcastItem>();
+        public static void OnRoundRestart()
+        {
+            globals.Clear();
+            normals.Clear();
+            Timing.KillCoroutines(ExpiringCoroutine, MessageCoroutine);
+        }
+        public static void OnEnabled()
+        {
+            ServerEvents.RoundRestarted += OnRoundRestart;
+            ServerEvents.WaitingForPlayers += OnWaitingForPlayersEvent;
+            Scp914Events.KnobChanged += MiscBroadcast.On914KnobChanged;
+            Scp914Events.Activated += MiscBroadcast.On914Activated;
+            ServerEvents.RoundStarted += MiscBroadcast.OnRoundStarted;
+            PlayerEvents.Joined += MiscBroadcast.OnPlayerJoined;
+            ServerEvents.RoundRestarted += MiscBroadcast.OnRoundRestart;
         }
         public static void OnWaitingForPlayersEvent()
         {
-            coroutine = Timing.RunCoroutine(Main());
+            ExpiringCoroutine = Timing.RunCoroutine(ExpiringMain());
+            MessageCoroutine = Timing.RunCoroutine(MessageMain());
         }
         public static void SendGlobalcast(BroadcastItem item)
         {
@@ -115,15 +159,10 @@ namespace Starinfall
         {
             normals.Add(item);
         }
-        public static IEnumerator<float> Main()
+        public static IEnumerator<float> ExpiringMain()
         {
             while (true)
             {
-                //消息主循环
-                foreach (Player player in Player.List)
-                {
-                    player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
-                }
                 //消息过期处理
                 foreach (var item in globals)
                 {
@@ -142,6 +181,18 @@ namespace Starinfall
                     if (normals[i].time < 0) normals.RemoveAt(i);
                 }
                 yield return Timing.WaitForSeconds(1f);
+            }
+        }
+        public static IEnumerator<float> MessageMain()
+        {
+            while (true)
+            {
+                //消息主循环
+                foreach (Player player in Player.List)
+                {
+                    player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
+                }
+                yield return Timing.WaitForSeconds(0.5f);
             }
         }
         public static string GetOutput(Player player)
@@ -244,10 +295,51 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem broadcastItem = new BroadcastItem { prefix = "<color=cyan>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            BroadcastItem broadcastItem = new BroadcastItem { prefix = "<color=#00FFFF>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
             BroadcastMain.SendGlobalcast(broadcastItem);
             response = "Done!";
             return true;
+        }
+    }
+    [CommandHandler(typeof(ClientCommandHandler))]
+    public class AdminHelp : ICommand
+    {
+        public string Command => "ac";
+
+        public string[] Aliases => Array.Empty<string>();
+
+        public string Description => "向在线管理发送消息";
+
+        public bool CheckPermission(Player player)
+        {
+            return (player.UserGroup?.Permissions & (ulong)PlayerPermissions.AdminChat) != 0;
+        }
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            var adminList = from p in Player.List
+                            where CheckPermission(p)
+                            select p;
+            if (adminList.Count() == 0)
+            {
+                response = "当前服务器中没有管理员！";
+                return false;
+            }
+            else
+            {
+                Player player = Player.Get(sender);
+                BroadcastItem item = new BroadcastItem
+                {
+                    prefix = "<color=red>玩家求助</color>",
+                    priority = (byte)BroadcastPriority.High,
+                    text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}",
+                    time = 8,
+                    Check = CheckPermission
+                };
+                BroadcastMain.SendNormalCast(item);
+                response = "Done!";
+                return true;
+            }
         }
     }
 }
