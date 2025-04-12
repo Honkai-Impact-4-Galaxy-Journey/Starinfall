@@ -74,7 +74,7 @@ namespace Starinfall
                 Check = p => p.RemoteAdminAccess,
                 priority = (byte)BroadcastPriority.High,
                 text = $"{ev.Player.Nickname}->{ev.Target.Nickname}:{ev.Reason}",
-                time = 3
+                time = 8
             });
         }
         public static void OnCheaterReported(PlayerReportedCheaterEventArgs ev)
@@ -85,7 +85,7 @@ namespace Starinfall
                 Check = p => p.RemoteAdminAccess,
                 priority = (byte)BroadcastPriority.Higher,
                 text = $"{ev.Player.Nickname}->{ev.Target.Nickname}:{ev.Reason}",
-                time = 3
+                time = 8
             });
         }
         public static void On914Activated(Scp914ActivatedEventArgs ev)
@@ -166,7 +166,7 @@ namespace Starinfall
             ServerEvents.RoundStarted += MiscBroadcast.OnRoundStarted;
             PlayerEvents.Joined += MiscBroadcast.OnPlayerJoined;
             ServerEvents.RoundRestarted += MiscBroadcast.OnRoundRestart;
-            PlayerEvents.ReportedCheater += MiscBroadcast.OnCheaterReported; 
+            PlayerEvents.ReportedCheater += MiscBroadcast.OnCheaterReported;
             PlayerEvents.ReportedPlayer += MiscBroadcast.OnPlayerReported;
         }
         public static void OnWaitingForPlayersEvent()
