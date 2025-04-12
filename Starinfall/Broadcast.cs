@@ -66,7 +66,28 @@ namespace Starinfall
                 time = 5
             });
         }
-        
+        public static void OnPlayerReported(PlayerReportedPlayerEventArgs ev)
+        {
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=orange>违规举报</color>",
+                Check = p => p.RemoteAdminAccess,
+                priority = (byte)BroadcastPriority.High,
+                text = $"{ev.Player.Nickname}->{ev.Target.Nickname}:{ev.Reason}",
+                time = 3
+            });
+        }
+        public static void OnCheaterReported(PlayerReportedCheaterEventArgs ev)
+        {
+            BroadcastMain.SendNormalCast(new BroadcastItem
+            {
+                prefix = "<color=red>外挂举报</color>",
+                Check = p => p.RemoteAdminAccess,
+                priority = (byte)BroadcastPriority.Higher,
+                text = $"{ev.Player.Nickname}->{ev.Target.Nickname}:{ev.Reason}",
+                time = 3
+            });
+        }
         public static void On914Activated(Scp914ActivatedEventArgs ev)
         {
             BroadcastMain.SendNormalCast(new BroadcastItem
@@ -145,6 +166,8 @@ namespace Starinfall
             ServerEvents.RoundStarted += MiscBroadcast.OnRoundStarted;
             PlayerEvents.Joined += MiscBroadcast.OnPlayerJoined;
             ServerEvents.RoundRestarted += MiscBroadcast.OnRoundRestart;
+            PlayerEvents.ReportedCheater += MiscBroadcast.OnCheaterReported; 
+            PlayerEvents.ReportedPlayer += MiscBroadcast.OnPlayerReported;
         }
         public static void OnWaitingForPlayersEvent()
         {
