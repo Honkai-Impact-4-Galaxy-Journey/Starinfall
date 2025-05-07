@@ -327,9 +327,9 @@ namespace Starinfall
     [CommandHandler(typeof(ClientCommandHandler))]
     public class AdminHelp : ICommand
     {
-        public string Command => "ac";
+        public string Command => "adminhelp";
 
-        public string[] Aliases => Array.Empty<string>();
+        public string[] Aliases => new string[] { "ah" };
 
         public string Description => "向在线管理发送消息";
 
@@ -363,6 +363,36 @@ namespace Starinfall
                 response = "Done!";
                 return true;
             }
+        }
+    }
+    [CommandHandler(typeof(RemoteAdminCommandHandler))]
+    public class AdminChat : ICommand
+    {
+        public string Command => "adminchat";
+
+        public string[] Aliases => new string[] { "ac" };
+
+        public string Description => "管理员聊天";
+
+        public bool CheckPermission(Player player)
+        {
+            return (player.UserGroup?.Permissions & (ulong)PlayerPermissions.AdminChat) != 0;
+        }
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            Player player = Player.Get(sender);
+            BroadcastItem item = new BroadcastItem
+            {
+                prefix = "<color=#00FFFF>管理员交流</color>",
+                priority = (byte)BroadcastPriority.High,
+                text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}",
+                time = 8,
+                Check = CheckPermission
+            };
+            BroadcastMain.SendNormalCast(item);
+            response = "Done!";
+            return true;
         }
     }
 }
