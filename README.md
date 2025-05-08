@@ -1,16 +1,16 @@
-# Starinfall
+# English - Starinfall
 
-一个新挖的坑，全新的，现基于LabAPI的插件
+A plugin under development, more practical functions will be added in the future
 
-您可以加入我们的交流群：1036464129
+You can join our [Discord](https://discord.gg/unuHWvfgQM)
 
-## 许可协议
+## License
 
-详见本仓库Wiki
+See this repository Wiki for details
 
-## 致谢
+## Credits
 
-感谢以下人员为Starinfall的开发做出的贡献：
+Thanks to the following people for their contributions to the development of Starinfall:
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
