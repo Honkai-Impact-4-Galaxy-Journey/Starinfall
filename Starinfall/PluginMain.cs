@@ -11,11 +11,13 @@ namespace Starinfall
 {
     public class MainConfig
     {
-        [Description("入服提醒（设为null以禁用）")]
-        public string JoinMessage { get; set; } = "null";
+        [Description("入服提醒")]
+        public string JoinMessage { get; set; } = "这是一个实例提醒";
+        [Description("入服提醒时长(s)（设为0以禁用）")]
+        public int JoinMessageTime { get; set; } = 8;
         [Description("定时提醒")]
         public string ScheduledMessage { get; set; } = "这是一个示例定时信息";
-        [Description("定时提醒时间(秒)（设为0以禁用）")]
+        [Description("定时提醒时间(s)（设为0以禁用）")]
         public int ScheduledTime { get; set; } = 300;
         [Description("MySQL连接字符串")]
         public string ConnectionString { get; set; } = "server=127.0.0.1;database=scp;user=root;password=123456;charset=utf-8";

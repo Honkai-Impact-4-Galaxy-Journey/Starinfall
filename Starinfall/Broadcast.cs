@@ -130,14 +130,14 @@ namespace Starinfall
 
         public static void OnPlayerJoined(PlayerJoinedEventArgs ev)
         {
-            if (PluginMain.Instance.Config.JoinMessage == "null") return;
+            if (PluginMain.Instance.Config.JoinMessageTime == 0) return;
             BroadcastMain.SendNormalCast(new BroadcastItem
             {
                 prefix = "<color=red>入服提醒</color>",
                 targets = new List<string> { ev.Player.UserId },
                 priority = (byte)BroadcastPriority.Low,
                 text = PluginMain.Instance.Config.JoinMessage,
-                time = 3
+                time = PluginMain.Instance.Config.JoinMessageTime
             });
         }
 
@@ -211,7 +211,7 @@ namespace Starinfall
             while (true)
             {
                 //消息主循环
-                foreach (Player player in Player.List)
+                foreach (Player player in Player.ReadyList)
                 {
                     player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
                 }
