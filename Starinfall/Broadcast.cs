@@ -160,6 +160,8 @@ namespace Starinfall
         public static void OnEnabled()
         {
             ServerEvents.RoundRestarted += OnRoundRestart;
+            ServerEvents.RoundRestarted += UI.OnRoundRestart;
+            ServerEvents.WaitingForPlayers += UI.OnWaitingForPlayers;
             ServerEvents.WaitingForPlayers += OnWaitingForPlayersEvent;
             Scp914Events.KnobChanged += MiscBroadcast.On914KnobChanged;
             Scp914Events.Activated += MiscBroadcast.On914Activated;
@@ -172,7 +174,7 @@ namespace Starinfall
         public static void OnWaitingForPlayersEvent()
         {
             ExpiringCoroutine = Timing.RunCoroutine(ExpiringMain());
-            MessageCoroutine = Timing.RunCoroutine(MessageMain());
+            //MessageCoroutine = Timing.RunCoroutine(MessageMain());
         }
         public static void SendGlobalcast(BroadcastItem item)
         {
