@@ -1,4 +1,7 @@
-﻿using CommandSystem;
+﻿using CentralAuth;
+using CommandSystem;
+using HarmonyLib;
+using LabApi.Features.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +28,15 @@ namespace Starinfall
             response += $"Copyright (C) {PluginMain.Instance.Author}, All Rights Reserved.\n";
             response += "仓库地址: https://github.com/Honkai-Impact-4-Galaxy-Journey/Starinfall";
             return true;
+        }
+    }
+    [HarmonyPatch]
+    public class PlayerVerified
+    {
+        [HarmonyPatch(typeof(PlayerAuthenticationManager), nameof(PlayerAuthenticationManager.FinalizeAuthentication))]
+        public static void Postfix(PlayerAuthenticationManager __instance)
+        {
+            // Put Codes Here
         }
     }
 }
