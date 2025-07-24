@@ -213,7 +213,8 @@ namespace Starinfall
                 //消息主循环
                 foreach (Player player in Player.ReadyList)
                 {
-                    player.SendBroadcast(GetOutput(player), 5, shouldClearPrevious: true);
+                    string message = GetOutput(player);
+                    if (message != null) player.SendBroadcast(message, 5, shouldClearPrevious: true);
                 }
                 yield return Timing.WaitForSeconds(0.5f);
             }
@@ -222,6 +223,7 @@ namespace Starinfall
         {
             try
             {
+                if (player == null || player.ReferenceHub == null) return null;
                 string response = "<line-height=65%><size=24>";
                 List<BroadcastItem> items = new List<BroadcastItem>();
                 items.AddRange(globals.Where(b => b.time > 0));
@@ -229,6 +231,7 @@ namespace Starinfall
                                where (item.time > 0) && player != Player.Host && (item.targets.Contains(player.UserId) || (item.Check != null && item.Check(player)))
                                select item);
                 items.Sort();
+                if (items.IsEmpty()) return null;
                 int remain = 5;
                 foreach (var item in items)
                 {
@@ -241,7 +244,7 @@ namespace Starinfall
             }
             catch (Exception ex)
             {
-                Logger.Error($"{ex.GetType()}:{ex.Message}");
+                Logger.Error($"{ex.GetType()}:{ex.Message}\n{ex.StackTrace}");
                 return "";
             }
         }
@@ -318,7 +321,9 @@ namespace Starinfall
         public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
         {
             Player player = Player.Get(sender);
-            BroadcastItem broadcastItem = new BroadcastItem { prefix = "<color=#00FFFF>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            BroadcastItem broadcastItem;
+            if (!((sender as CommandSender).SenderId == ServerConsole.Scs.SenderId)) broadcastItem = new BroadcastItem { prefix = "<color=#00FFFF>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"{player.DisplayName}:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
+            else broadcastItem = new BroadcastItem { prefix = "<color=#00FFFF>管理员公告</color>", priority = (byte)BroadcastPriority.High, text = $"Server:{arguments.At(0).Replace('|', ' ')}", time = arguments.Count > 1 ? int.Parse(arguments.At(1)) : 15 };
             BroadcastMain.SendGlobalcast(broadcastItem);
             response = "Done!";
             return true;
