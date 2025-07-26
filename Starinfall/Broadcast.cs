@@ -208,19 +208,19 @@ namespace Starinfall
                 yield return Timing.WaitForSeconds(1f);
             }
         }
-        public static IEnumerator<float> MessageMain()
-        {
-            while (true)
-            {
-                //消息主循环
-                foreach (Player player in Player.ReadyList)
-                {
-                    string message = GetOutput(player);
-                    if (message != null) player.SendBroadcast(message, 5, shouldClearPrevious: true);
-                }
-                yield return Timing.WaitForSeconds(0.5f);
-            }
-        }
+        //public static IEnumerator<float> MessageMain()
+        //{
+        //    while (true)
+        //    {
+        //        //消息主循环
+        //        foreach (Player player in Player.ReadyList)
+        //        {
+        //            string message = GetOutput(player);
+        //            if (message != null) player.SendBroadcast(message, 5, shouldClearPrevious: true);
+        //        }
+        //        yield return Timing.WaitForSeconds(0.5f);
+        //    }
+        //}
         public static string GetOutput(Player player)
         {
             try
