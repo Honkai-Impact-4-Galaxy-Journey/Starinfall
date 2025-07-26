@@ -27,10 +27,10 @@ namespace Starinfall
         public static PluginMain Instance { get; private set; }
         public override string Author => "崩坏4:银河漫游团队";
         public override string Name => "Starinfall";
-        public override Version Version => new Version(1,0,0,0);
+        public override Version Version => new Version(1,1,0,0);
         public override string Description => "服务器核心插件";
         public override Version RequiredApiVersion => new Version("0.0.0.0");
-        public string Codename => "StarRail";
+        public string Codename => "Aglaea";
         public override void Enable()
         {
             Instance = this;
